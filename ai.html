@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 导航宇宙 - 全球热门人工智能工具合集</title>
+    <style>
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: #0b1120;
+            color: #f8fafc;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* 动态流体粒子背景画布 */
+        #particle-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: radial-gradient(circle at center, #171e31 0%, #0b1120 100%);
+        }
+
+        /* 主容器 */
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 50px 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* 头部设计 */
+        header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        header h1 {
+            font-size: 3.2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #60a5fa, #c084fc, #f472b6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 15px;
+            letter-spacing: 2px;
+        }
+
+        header p {
+            color: #94a3b8;
+            font-size: 1.15rem;
+        }
+
+        /* 搜索框 (毛玻璃效果) */
+        .search-box {
+            max-width: 650px;
+            margin: 35px auto;
+            position: relative;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 20px 30px;
+            font-size: 1.15rem;
+            color: #fff;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 40px;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            outline: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .search-box input:focus {
+            border-color: rgba(192, 132, 252, 0.6);
+            box-shadow: 0 0 25px rgba(192, 132, 252, 0.25);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        /* 分类区块 */
+        .category {
+            margin-bottom: 55px;
+        }
+
+        .category-title {
+            font-size: 1.6rem;
+            font-weight: 600;
+            margin-bottom: 25px;
+            color: #e2e8f0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .category-title::before {
+            content: '';
+            display: block;
+            width: 5px;
+            height: 22px;
+            background: linear-gradient(to bottom, #c084fc, #3b82f6);
+            border-radius: 3px;
+        }
+
+        /* 网格布局 */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 25px;
+        }
+
+        /* 卡片设计 (高级毛玻璃效果) */
+        .card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 20px;
+            padding: 24px;
+            text-decoration: none;
+            color: inherit;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 50%;
+            height: 100%;
+            background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.04) 50%, rgba(255,255,255,0) 100%);
+            transform: skewX(-25deg);
+            transition: all 0.6s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-6px);
+            border-color: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4), 0 0 20px rgba(192, 132, 252, 0.15);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .card:hover::before {
+            left: 200%;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        /* 官方图标容器 */
+        .icon-container {
+            width: 50px;
+            height: 50px;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            box-shadow: inset 0 2px 5px rgba(255,255,255,0.05);
+            flex-shrink: 0;
+        }
+
+        .icon-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 14px;
+        }
+
+        .title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #f8fafc;
+            letter-spacing: 0.5px;
+        }
+
+        .desc {
+            font-size: 0.95rem;
+            color: #94a3b8;
+            line-height: 1.6;
+        }
+
+        /* 响应式调整 */
+        @media (max-width: 768px) {
+            header h1 { font-size: 2.4rem; }
+            .grid { grid-template-columns: repeat(auto-fill, minmax(100%, 1fr)); }
+            .container { padding: 30px 15px; }
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="particle-canvas"></canvas>
+
+    <div class="container">
+        <header>
+            <h1>AI 导航宇宙</h1>
+            <p>集成全球最前沿、最实用的 AI 生产力工具</p>
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="搜索工具名称或用途 (如: 绘图, 代码, 视频, DeepSeek)...">
+            </div>
+        </header>
+
+        <div class="category">
+            <h2 class="category-title">🇨🇳 国内核心大模型 (LLM)</h2>
+            <div class="grid">
+                <a href="https://www.deepseek.com/" target="_blank" class="card" data-tags="deepseek 深度求索 代码 聊天 写作 编程">
+                    <div class="card-header">
+                        <div class="icon-container"><img src=".\assets\img\ds.png" alt="DeepSeek"></div>
+                        <div class="title">DeepSeek</div>
+                    </div>
+                    <div class="desc">深度求索出品，目前国内代码与逻辑能力顶尖的开源/闭源模型。</div>
+                </a>
+                <a href="https://kimi.moonshot.cn/" target="_blank" class="card" data-tags="kimi 月之暗面 长文本 阅读 总结 文档">
+                    <div class="card-header">
+                        <div class="icon-container"><img src=".\assets\img\kimi.png" alt="Kimi"></div>
+                        <div class="title">Kimi 智能助手</div>
+                    </div>
+                    <div class="desc">月之暗面推出，国内超长文本处理的王者，极度擅长财报与长文档分析。</div>
+                </a>
+                <a href="https://tongyi.aliyun.com/" target="_blank" class="card" data-tags="通义千问 alibaba 阿里 写作 多模态">
+                    <div class="card-header">
+                        <div class="icon-container"><img src=".\assets\img\tongyi.png" alt="通义千问"></div>
+                        <div class="title">通义千问</div>
+                    </div>
+                    <div class="desc">阿里云全栈自研，功能极其丰富，支持文档、图片、音视频多模态解析。</div>
+                </a>
+                <a href="https://chatglm.cn/" target="_blank" class="card" data-tags="智谱清言 zhipu glm 写作 绘画 数据分析">
+                    <div class="card-header">
+                        <div class="icon-container"><img src=".\assets\img\zhipu.png" alt="智谱清言"></div>
+                        <div class="title">智谱清言</div>
+                    </div>
+                    <div class="desc">智谱AI推出，具备强大的数据分析、代码执行及智能体创建能力。</div>
+                </a>
+                <a href="https://www.doubao.com/" target="_blank" class="card" data-tags="豆包 字节跳动 语音 聊天 搜索">
+                    <div class="card-header">
+                        <div class="icon-container"><img src=".\assets\img\doubao.png" alt="豆包"></div>
+                        <div class="title">豆包 (Doubao)</div>
+                    </div>
+                    <div class="desc">字节跳动旗下 AI 助手，响应极快，语音对话功能体验国内领先。</div>
+                </a>
+                <a href="https://yiyan.baidu.com/" target="_blank" class="card" data-tags="文心一言 百度 baidu 搜索 写作">
+                    <div class="card-header">
+                        <div class="icon-container"><img src=".\assets\img\tongyi.png" alt="文心一言"></div>
+                        <div class="title">文心一言</div>
+                    </div>
+                    <div class="desc">百度研发的新一代知识增强大语言模型，深度融合百度搜索生态。</div>
+                </a>
+            </div>
+        </div>
+
+        <div class="category">
+            <h2 class="category-title">🌍 国际核心大模型 (LLM)</h2>
+            <div class="grid">
+                <a href="https://chatgpt.com/" target="_blank" class="card" data-tags="chatgpt openai 聊天 写作 代码 GPT-4o">
+                    <div class="card-header">
+                        <div class="icon-container"><img src=".\assets\img\chatgpt.png" alt="ChatGPT"></div>
+                        <div class="title">ChatGPT</div>
+                    </div>
+                    <div class="desc">OpenAI 打造的地表最强 AI 助手，搭载 GPT-4o 引擎。</div>
+                </a>
+                <a href="https://claude.ai/" target="_blank" class="card" data-tags="claude anthropic 聊天 长文本 代码 逻辑">
+                    <div class="card-header">
+                        <div class="icon-container"><img src=".\assets\img\claude.png" alt="Claude"></div>
+                        <div class="title">Claude</div>
+                    </div>
+                    <div class="desc">Anthropic 旗舰模型，以极其自然的人类口吻和顶级的代码能力著称。</div>
+                </a>
+                <a href="https://gemini.google.com/" target="_blank" class="card" data-tags="gemini google 谷歌 多模态 搜索">
+                    <div class="card-header">
+                        <div class="icon-container"><img src=".\assets\img\gemini.png" alt="Gemini"></div>
+                        <div class="title">Google Gemini</div>
+                    </div>
+                    <div class="desc">谷歌强大的原生多模态大模型，深度整合 Google Workspace。</div>
+                </a>
+                <a href="https://www.perplexity.ai/" target="_blank" class="card" data-tags="perplexity 搜索 问答 研究 论文">
+                    <div class="card-header">
+                        <div class="icon-container"><img src=".\assets\img\perplexity.png" alt="Perplexity"></div>
+                        <div class="title">Perplexity AI</div>
+                    </div>
+                    <div class="desc">革命性的 AI 搜索引擎，提供带有准确引用来源的直接答案。</div>
+                </a>
+            </div>
+        </div>
+
+        <div class="category">
+            <h2 class="category-title">🎨 AI 视觉与设计</h2>
+            <div class="grid">
+                <a href="https://www.midjourney.com/" target="_blank" class="card" data-tags="midjourney mj 画图 设计 艺术 绘画">
+                    <div class="card-header">
+                        <div class="icon-container"><img src=".\assets\img\midjourney.png" alt="Midjourney"></div>
+                        <div class="title">Midjourney</div>
+                    </div>
+                    <div class="desc">艺术感和细节表现最强的 AI 图像生成工具，UI现已支持网页版。</div>
+                </a>
+                <a href="https://www.liblib.art/" target="_blank" class="card" data-tags="liblib 哩布 sd 模型 开源 画图 控制 绘画">
+                    <div class="card-header">
+                        <div class="icon-container"><img src=".\assets\img\liblib.png" alt="LiblibAI"></div>
+                        <div class="title">LiblibAI (哩布哩布)</div>
+                    </div>
+                    <div class="desc">国内最大的 Stable Diffusion AI 绘画模型聚合与在线生图平台。</div>
+                </a>
+                <a href="https://www.canva.com/" target="_blank" class="card" data-tags="canva 设计 海报 排版 PPT">
+                    <div class="card-header">
+                        <div class="icon-container"><img src=".\assets\img\canva.jpg" alt="Canva"></div>
+                        <div class="title">Canva 魔法工作室</div>
+                    </div>
+                    <div class="desc">全面集成 AI 能力的在线设计平台，一键生成海报与排版。</div>
+                </a>
+            </div>
+        </div>
+
+        <div class="category">
+            <h2 class="category-title">🎬 视频与音乐生成</h2>
+            <div class="grid">
+                <a href="https://klingai.kuaishou.com/" target="_blank" class="card" data-tags="可灵 kling 视频 动画 快手 sora">
+                    <div class="card-header">
+                        <div class="icon-container"><img src=".\assets\img\kling.png" alt="可灵AI"></div>
+                        <div class="title">可灵 AI (Kling)</div>
+                    </div>
+                    <div class="desc">快手推出的视频生成大模型，物理规律模拟极其逼真，对标 Sora。</div>
+                </a>
+                <a href="https://www.vidu.studio/" target="_blank" class="card" data-tags="vidu 生数 视频 动画 电影">
+                    <div class="card-header">
+                        <div class="icon-container"><img src=".\assets\img\vidu.png" alt="Vidu"></div>
+                        <div class="title">Vidu</div>
+                    </div>
+                    <div class="desc">生数科技推出的国产高清视频大模型，一键生成极具电影感的视频。</div>
+                </a>
+                <a href="https://runwayml.com/" target="_blank" class="card" data-tags="runway gen3 视频 动画 剪辑">
+                    <div class="card-header">
+                        <div class="icon-container"><img src=".\assets\img\runway.png" alt="Runway"></div>
+                        <div class="title">Runway (Gen-3)</div>
+                    </div>
+                    <div class="desc">国际领先的 AI 视频生成平台，提供行业级的高保真视频创作。</div>
+                </a>
+                <a href="https://suno.com/" target="_blank" class="card" data-tags="suno 音乐 唱歌 作曲 编曲">
+                    <div class="card-header">
+                        <div class="icon-container"><img src=".\assets\img\suno.png" alt="Suno"></div>
+                        <div class="title">Suno AI</div>
+                    </div>
+                    <div class="desc">现象级 AI 音乐生成器，输入风格或歌词即可创作录音室级别的歌曲。</div>
+                </a>
+            </div>
+        </div>
+        
+        <div class="category">
+            <h2 class="category-title">⚡ 生产力与代码</h2>
+            <div class="grid">
+                <a href="https://www.cursor.com/" target="_blank" class="card" data-tags="cursor 代码 编程 开发 ide">
+                    <div class="card-header">
+                        <div class="icon-container"><img src=".\assets\img\cursor.png" alt="Cursor"></div>
+                        <div class="title">Cursor</div>
+                    </div>
+                    <div class="desc">目前最火爆的 AI 代码编辑器，深度融合大模型，重塑编程体验。</div>
+                </a>
+                <a href="https://github.com/features/copilot" target="_blank" class="card" data-tags="github copilot 代码 编程 开发">
+                    <div class="card-header">
+                        <div class="icon-container"><img src=".\assets\img\copilot.png" alt="GitHub Copilot"></div>
+                        <div class="title">GitHub Copilot</div>
+                    </div>
+                    <div class="desc">程序员必备的 AI 结对编程助手，主流 IDE 全面支持。</div>
+                </a>
+                <a href="https://www.notion.so/product/ai" target="_blank" class="card" data-tags="notion 笔记 写作 总结 知识库 办公">
+                    <div class="card-header">
+                        <div class="icon-container"><img src=".\assets\img\notion.png" alt="Notion AI"></div>
+                        <div class="title">Notion AI</div>
+                    </div>
+                    <div class="desc">无缝集成在知识库中的 AI 助手，帮你一键排版、总结与创作。</div>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- 搜索过滤功能 ---
+        const searchInput = document.getElementById('searchInput');
+        const cards = document.querySelectorAll('.card');
+
+        searchInput.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase().trim();
+            cards.forEach(card => {
+                const tags = card.getAttribute('data-tags').toLowerCase();
+                const text = card.innerText.toLowerCase();
+                if (tags.includes(searchTerm) || text.includes(searchTerm)) {
+                    card.style.display = 'flex';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+
+        // --- 纯发光粒子流体背景 (取消了生硬的线条，优化为流体氛围) ---
+        const canvas = document.getElementById('particle-canvas');
+        const ctx = canvas.getContext('2d');
+        let width, height, particles;
+
+        function init() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            particles = [];
+            // 根据屏幕大小调整粒子数量
+            const particleCount = window.innerWidth < 768 ? 30 : 60;
+            for (let i = 0; i < particleCount; i++) {
+                particles.push(new Particle());
+            }
+        }
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                // 缓慢的流体运动速度
+                this.vx = (Math.random() - 0.5) * 0.4;
+                this.vy = (Math.random() - 0.5) * 0.4;
+                // 粒子大小随机，营造空间感
+                this.radius = Math.random() * 40 + 10;
+                // 柔和的科技色系
+                const colors = ['#8b5cf6', '#3b82f6', '#ec4899', '#06b6d4'];
+                this.color = colors[Math.floor(Math.random() * colors.length)];
+                this.alpha = Math.random() * 0.4 + 0.05;
+            }
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                // 边缘无缝反弹
+                if (this.x < -50 || this.x > width + 50) this.vx *= -1;
+                if (this.y < -50 || this.y > height + 50) this.vy *= -1;
+            }
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.globalAlpha = this.alpha;
+                // 添加发光模糊效果，形成流体光晕
+                ctx.shadowBlur = 40;
+                ctx.shadowColor = this.color;
+                ctx.fill();
+                
+                // 重置属性以免影响下一个元素
+                ctx.globalAlpha = 1.0;
+                ctx.shadowBlur = 0;
+            }
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            // 清理画布
+            ctx.clearRect(0, 0, width, height);
+            
+            // 仅绘制发光流体粒子，去除生硬连线
+            for (let i = 0; i < particles.length; i++) {
+                particles[i].update();
+                particles[i].draw();
+            }
+        }
+
+        window.addEventListener('resize', init);
+        init();
+        animate();
+    </script>
+</body>
+</html>
